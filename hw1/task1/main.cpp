@@ -1,31 +1,25 @@
-#include <cstdio>
-#include <string>
-#include <cassert>
+#include "rank_support.h"
 
-#define NAME_MAX 25
-
-std::size_t g_tests{};
-std::size_t g_passes{};
-
-void test_eq(uint64_t e, uint64_t a, std::string& name) {
-  aasert(name.size() < NAME_MAX);
+void test_eq(uint64_t a, uint64_t e, const std::string& name, int& tests, int& passes) {
+  assert(name.size() < 35);
   if (a != e) {
-    printf("%-NAME_MAXsFAIL      expetced %d, got %d\n", name, e, a);
-    g_tests++;
+    printf("%-35sFAIL      expected %lu, got %lu\n", name.c_str(), e, a);
+    tests++;
   } else {
-    printf("%-NAME_MAXsPASS      got %d\n", name, a);
-    g_passes++;
-    g_tests++;
+    printf("%-35sPASS      got %lu\n", name.c_str(), a);
+    passes++;
+    tests++;
   }
 }
 
 int main() {
-  printf("%-NAME_MAXsRESULT    DETAILS", "NAME");
+  std::string n("NAME");
+  printf("%-35sRESULT    DETAILS\n", n.c_str());
+  int passes = 0, tests = 0;
 
-  // insert test calls here
   
-  
+
   printf("Test complete. %f%% pass rate, %d pass, %d fail, %d total.\n",
-         g_passes/g_tests, g_passes, g_tests - g_passes, g_tests);
+         (double) passes/tests, passes, tests - passes, tests);
   return 0;
 }
