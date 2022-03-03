@@ -1,4 +1,5 @@
-#include "rank_support.h"
+#include <cassert>
+#include "rank_support.hpp"
 
 void test_eq(uint64_t a, uint64_t e, const std::string& name, int& tests, int& passes) {
   assert(name.size() < 35);
@@ -17,7 +18,9 @@ int main() {
   printf("%-35sRESULT    DETAILS\n", n.c_str());
   int passes = 0, tests = 0;
 
-  
+  bitvector b;
+  b.assign({0,1,1,1,0,1,0,1,1,1,0,0,1,1,0,1,0,1,1,1,0,1,1,1,0,0,0,0});
+  rank_support r(b);
 
   printf("Test complete. %f%% pass rate, %d pass, %d fail, %d total.\n",
          (double) passes/tests, passes, tests - passes, tests);
