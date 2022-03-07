@@ -1,29 +1,14 @@
-
 #ifndef __COMPACT_VECTOR_H__
 #define __COMPACT_VECTOR_H__
 
 #include <new>
 #include <stdexcept>
 #include <cstring>
-#include <system_error> // for std::error_code
 #include <algorithm>
-#include <fstream>
-#include <iostream>
 
 #include "compact_iterator.hpp"
 
 namespace compact {
-
-inline uint64_t get_bits_per_element(const std::string &fname) {
-  // load the vector by reading from file
-  std::ifstream ifile(fname, std::ios::binary);
-  uint64_t static_flag{0};
-  ifile.read(reinterpret_cast<char *>(&static_flag), sizeof(static_flag));
-  uint64_t bits_per_element;
-  ifile.read(reinterpret_cast<char *>(&bits_per_element), sizeof(bits_per_element));
-  ifile.close();
-  return bits_per_element;
-}
 
 namespace vector_imp {
 inline int clz(unsigned int x) { return __builtin_clz(x); }
@@ -38,7 +23,7 @@ class vector {
   size_t    m_capacity;         // Capacity in number of elements
   W*        m_mem;
 
- public:
+public:
   // Number of bits required for indices/values in the range [0, s).
   static unsigned required_bits(size_t s) {
     unsigned res = bitsof<size_t>::val - 1 - clz(s);
@@ -57,8 +42,7 @@ class vector {
   typedef std::reverse_iterator<iterator>        reverse_iterator;
   typedef std::reverse_iterator<const_iterator>  const_reverse_iterator;
 
- protected:
-
+protected:
   static W* allocate_s(size_t capacity, unsigned bits, Allocator& allocator) {
     const auto nb_words = elements_to_words(capacity, bits);
     W* res = allocator.allocate(nb_words);
@@ -78,37 +62,37 @@ class vector {
   // Error messages
   static constexpr const char* EOUTOFRANGE = "Index is out of range";
 
- public:
+public:
 
   vector(vector &&rhs)
-      : m_allocator(std::move(rhs.m_allocator))
-      , m_size(rhs.m_size)
-      , m_capacity(rhs.m_capacity)
-      , m_mem(rhs.m_mem)
+    : m_allocator(std::move(rhs.m_allocator))
+    , m_size(rhs.m_size)
+    , m_capacity(rhs.m_capacity)
+    , m_mem(rhs.m_mem)
   {
     rhs.m_size = rhs.m_capacity = 0;
     rhs.m_mem = nullptr;
   }
   vector(const vector &rhs)
-      : m_allocator(rhs.m_allocator)
-      , m_size(rhs.m_size)
-      , m_capacity(rhs.m_capacity)
-      , m_mem(allocate_s(m_capacity, rhs.bits(), m_allocator))
+    : m_allocator(rhs.m_allocator)
+    , m_size(rhs.m_size)
+    , m_capacity(rhs.m_capacity)
+    , m_mem(allocate_s(m_capacity, rhs.bits(), m_allocator))
   {
     std::memcpy(m_mem, rhs.m_mem, rhs.bytes());
   }
 
   vector(unsigned b, size_t s, Allocator allocator = Allocator())
-      : m_allocator(allocator)
-      , m_size(s)
-      , m_capacity(s)
-      , m_mem(allocate_s(s, b, m_allocator))
+    : m_allocator(allocator)
+    , m_size(s)
+    , m_capacity(s)
+    , m_mem(allocate_s(s, b, m_allocator))
   {
     static_assert(UB <= bitsof<W>::val, "used_bits must be less or equal to the number of bits in the word_type");
     static_assert(BITS <= UB, "number of bits larger than usable bits");
   }
   explicit vector(Allocator allocator = Allocator())
-      : vector(0, 0, allocator)
+    : vector(0, 0, allocator)
   { }
   ~vector() {
     m_allocator.deallocate(m_mem, elements_to_words(m_capacity, bits()));
@@ -156,8 +140,8 @@ class vector {
 
   IDX operator[](size_t i) const {
     return BITS
-        ? *const_iterator(m_mem + (i * BITS) / UB, BITS, (i * BITS) % UB)
-        : *const_iterator(m_mem + (i * bits()) / UB, bits(), (i * bits()) % UB);
+      ? *const_iterator(m_mem + (i * BITS) / UB, BITS, (i * BITS) % UB)
+      : *const_iterator(m_mem + (i * bits()) / UB, bits(), (i * bits()) % UB);
     // return cbegin()[i];
   }
   IDX at(size_t i) const {
@@ -166,8 +150,8 @@ class vector {
   }
   typename iterator::lhs_setter_type operator[](size_t i) {
     return BITS
-        ? typename iterator::lhs_setter_type(m_mem + (i * BITS) / UB, BITS, (i * BITS) % UB)
-        : typename iterator::lhs_setter_type(m_mem + (i * bits()) / UB, bits(), (i * bits()) % UB);
+      ? typename iterator::lhs_setter_type(m_mem + (i * BITS) / UB, BITS, (i * BITS) % UB)
+      : typename iterator::lhs_setter_type(m_mem + (i * bits()) / UB, bits(), (i * bits()) % UB);
     //  return begin()[i];
   }
   typename iterator::lhs_setter_type at(size_t i) {
@@ -258,115 +242,7 @@ class vector {
   static constexpr unsigned used_bits() { return UB; }
   static constexpr bool thread_safe() { return TS; }
 
-  // set all values in the vector to 0
-  // *Note* : would be nice to have the constructor
-  // optionally take a value to fill in or use a default ...
-  inline void clear_mem() {
-    std::memset(this->get(), 0, this->capacity_bytes());
-  }
-
-  void serialize(std::ofstream &of)
-  {
-    uint64_t static_flag = (static_bits() == bits()) ? 1 : 0;
-    of.write(reinterpret_cast<char *>(&static_flag), sizeof(static_flag));
-    if (static_flag != 0)
-    {
-      uint64_t bits_per_element = static_bits();
-      of.write(reinterpret_cast<char *>(&bits_per_element), sizeof(bits_per_element));
-    }
-    else
-    {
-      uint64_t bits_per_element = bits();
-      of.write(reinterpret_cast<char *>(&bits_per_element), sizeof(bits_per_element));
-    }
-    uint64_t w_size = m_size;
-    of.write(reinterpret_cast<char *>(&w_size), sizeof(w_size));
-    uint64_t w_capacity = m_capacity;
-    of.write(reinterpret_cast<char *>(&w_capacity), sizeof(w_capacity));
-    of.write(reinterpret_cast<char *>(m_mem), bytes());
-    // std::cerr << "wrote " << bytes() << " bytes of data at the end\n";
-  }
-
-  void deserialize(const std::string &fname)
-  {
-    bool mmap = false;
-    uint64_t bits_per_element{0}, w_size{0}, w_capacity{0};
-    deserialize(fname, mmap, bits_per_element, w_size, w_capacity);
-  }
-
-  void deserialize( const std::string& fname, bool mmap,
-                    uint64_t& bits_per_element, uint64_t& w_size, uint64_t& w_capacity) {
-    std::error_code error;
-    // load the vector by reading from file
-    std::ifstream ifile(fname, std::ios::binary);
-    uint64_t static_flag{0};
-    ifile.read(reinterpret_cast<char*>(&static_flag),
-               sizeof(static_flag));
-
-    ifile.read(reinterpret_cast<char*>(&bits_per_element),
-               sizeof(bits_per_element));
-
-    // std::cerr<< "bits / element = " << bits_per_element << "\n";
-
-    ifile.read(reinterpret_cast<char*>(&w_size), sizeof(w_size));
-    m_size = w_size;
-    std::cerr << "size = " << m_size << "\n";
-
-    ifile.read(reinterpret_cast<char*>(&w_capacity),
-               sizeof(w_capacity));
-    m_capacity = w_capacity;
-    // std::cerr<< "capacity = " << m_capacity << "\n";
-
-    m_allocator.deallocate(m_mem,
-                           elements_to_words(m_capacity, bits()));
-    m_mem =
-        m_allocator.allocate(elements_to_words(m_capacity, bits_per_element));
-    if (m_mem == nullptr)
-      throw std::bad_alloc();
-    ifile.read(reinterpret_cast<char*>(m_mem),
-               sizeof(W) * elements_to_words(m_size, bits_per_element));
-  }
-  
-  void deserialize(std::ifstream &ifs)
-  {
-    bool mmap = false;
-    uint64_t bits_per_element{0}, w_size{0}, w_capacity{0};
-    deserialize(ifs, mmap, bits_per_element, w_size, w_capacity);
-  }
-
-  void deserialize( std::ifstream &ifile, bool mmap,
-                    uint64_t& bits_per_element, uint64_t& w_size, uint64_t& w_capacity) {
-    std::error_code error;
-    // load the vector by reading from file
-    uint64_t static_flag{0};
-    ifile.read(reinterpret_cast<char*>(&static_flag),
-               sizeof(static_flag));
-
-    ifile.read(reinterpret_cast<char*>(&bits_per_element),
-               sizeof(bits_per_element));
-
-    // std::cerr<< "bits / element = " << bits_per_element << "\n";
-
-    ifile.read(reinterpret_cast<char*>(&w_size), sizeof(w_size));
-    m_size = w_size;
-    std::cerr << "size = " << m_size << "\n";
-
-    ifile.read(reinterpret_cast<char*>(&w_capacity),
-               sizeof(w_capacity));
-    m_capacity = w_capacity;
-    // std::cerr<< "capacity = " << m_capacity << "\n";
-
-    m_allocator.deallocate(m_mem,
-                           elements_to_words(m_capacity, bits()));
-    m_mem =
-        m_allocator.allocate(elements_to_words(m_capacity, bits_per_element));
-    if (m_mem == nullptr)
-      throw std::bad_alloc();
-    ifile.read(reinterpret_cast<char*>(m_mem),
-               sizeof(W) * elements_to_words(m_size, bits_per_element));
-  }
-
- protected:
+protected:
   void enlarge(size_t given = 0) {
     const size_t new_capacity = !given ? std::max(m_capacity * 2, (size_t)(bitsof<W>::val / bits() + 1)) : given;
     W* new_mem = allocate(new_capacity);
@@ -379,12 +255,12 @@ class vector {
 
 template<typename IDX, typename W, typename Allocator, unsigned UB, bool TS>
 class vector_dyn
-    : public vector_imp::vector<vector_dyn<IDX, W, Allocator, UB, TS>, IDX, 0, W, Allocator, UB, TS>
+  : public vector_imp::vector<vector_dyn<IDX, W, Allocator, UB, TS>, IDX, 0, W, Allocator, UB, TS>
 {
   typedef vector_imp::vector<vector_dyn<IDX, W, Allocator, UB, TS>, IDX, 0, W, Allocator, UB, TS> super;
   const unsigned m_bits;    // Number of bits in an element
 
- public:
+public:
   typedef typename super::iterator              iterator;
   typedef typename super::const_iterator        const_iterator;
   typedef IDX                                   value_type;
@@ -400,22 +276,22 @@ class vector_dyn
   typedef W                                     word_type;
 
   vector_dyn(unsigned b, size_t s, Allocator allocator = Allocator())
-      : super(b, s, allocator)
-      , m_bits(b)
+    : super(b, s, allocator)
+    , m_bits(b)
   { }
   vector_dyn(unsigned b, Allocator allocator = Allocator())
-      : super(allocator)
-      , m_bits(b)
+    : super(allocator)
+    , m_bits(b)
   { }
 
   vector_dyn(vector_dyn&& rhs)
-      : super(std::move(rhs))
-      , m_bits(rhs.bits())
+    : super(std::move(rhs))
+    , m_bits(rhs.bits())
   { }
 
   vector_dyn(const vector_dyn& rhs)
-      : super(rhs)
-      , m_bits(rhs.bits())
+    : super(rhs)
+    , m_bits(rhs.bits())
   { }
 
   inline unsigned bits() const { return m_bits; }
@@ -433,35 +309,17 @@ class vector_dyn
     static_cast<super*>(this)->operator=(std::move(rhs));
     return *this;
   }
-
-  //void set_m_bits(size_t m) { m_bits = m; }
-  // m_bits is const so we have to rely on the user
-  // to set up the vector with the right bit width
-
-  void deserialize(const std::string& fname) {
-    bool mmap = false;
-    uint64_t bits_per_element, w_size, w_capacity;
-    static_cast<super*>(this)->deserialize(fname, mmap, bits_per_element, w_size, w_capacity);
-    //set_m_bits(bits_per_element);
-  }
-
-  void deserialize(std::ifstream& ifs) {
-    bool mmap = false;
-    uint64_t bits_per_element, w_size, w_capacity;
-    static_cast<super*>(this)->deserialize(ifs, mmap, bits_per_element, w_size, w_capacity);
-    //set_m_bits(bits_per_element);
-  }
 };
 
 } // namespace vector_imp
 
 template<typename IDX, unsigned BITS = 0, typename W = uint64_t, typename Allocator = std::allocator<W>>
 class vector
-    : public vector_imp::vector<vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val, false>
+  : public vector_imp::vector<vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val, false>
 {
   typedef vector_imp::vector<vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val, false> super;
 
- public:
+public:
   typedef typename super::iterator              iterator;
   typedef typename super::const_iterator        const_iterator;
   typedef IDX                                   value_type;
@@ -477,10 +335,10 @@ class vector
   typedef W                                     word_type;
 
   vector(size_t s, Allocator allocator = Allocator())
-      : super(BITS, s, allocator)
+    : super(BITS, s, allocator)
   { }
   vector(Allocator allocator = Allocator())
-      : super(allocator)
+    : super(allocator)
   { }
 
   static constexpr unsigned bits() { return BITS; }
@@ -488,11 +346,11 @@ class vector
 
 template<typename IDX, typename W, typename Allocator>
 class vector<IDX, 0, W, Allocator>
-    : public vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val, false>
+  : public vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val, false>
 {
   typedef vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val, false> super;
 
- public:
+public:
   typedef typename super::iterator              iterator;
   typedef typename super::const_iterator        const_iterator;
   typedef IDX                                   value_type;
@@ -508,23 +366,23 @@ class vector<IDX, 0, W, Allocator>
   typedef W                                     word_type;
 
   vector(unsigned b, size_t s, Allocator allocator = Allocator())
-      : super(b, s, allocator)
+    : super(b, s, allocator)
   {
     if(b > bitsof<W>::val)
       throw std::out_of_range("Number of bits larger than usable bits");
   }
   vector(unsigned b, Allocator allocator = Allocator())
-      : super(b, allocator)
+    : super(b, allocator)
   { }
 };
 
 template<typename IDX, unsigned BITS = 0, typename W = uint64_t, typename Allocator = std::allocator<W>>
 class ts_vector
-    : public vector_imp::vector<ts_vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val, true>
+  : public vector_imp::vector<ts_vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val, true>
 {
   typedef vector_imp::vector<ts_vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val, true> super;
 
- public:
+public:
   typedef typename super::iterator              iterator;
   typedef typename super::const_iterator        const_iterator;
   typedef IDX                                   value_type;
@@ -540,10 +398,10 @@ class ts_vector
   typedef W                                     word_type;
 
   ts_vector(size_t s, Allocator allocator = Allocator())
-      : super(BITS, s, allocator)
+    : super(BITS, s, allocator)
   { }
   ts_vector(Allocator allocator = Allocator())
-      : super(allocator)
+    : super(allocator)
   { }
 
   static constexpr unsigned bits() { return BITS; }
@@ -552,10 +410,10 @@ class ts_vector
 
 template<typename IDX, typename W, typename Allocator>
 class ts_vector<IDX, 0, W, Allocator>
-    : public vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val, true>
+  : public vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val, true>
 {
   typedef vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val, true> super;
- public:
+public:
   typedef typename super::iterator              iterator;
   typedef typename super::const_iterator        const_iterator;
   typedef IDX                                   value_type;
@@ -571,23 +429,23 @@ class ts_vector<IDX, 0, W, Allocator>
   typedef W                                     word_type;
 
   ts_vector(unsigned b, size_t s, Allocator allocator = Allocator())
-      : super(b, s, allocator)
+    : super(b, s, allocator)
   {
     if(b > bitsof<W>::val)
       throw std::out_of_range("Number of bits larger than usable bits");
   }
   ts_vector(unsigned b, Allocator allocator = Allocator())
-      : super(b, allocator)
+    : super(b, allocator)
   { }
 };
 
 template<typename IDX, unsigned BITS = 0, typename W = uint64_t, typename Allocator = std::allocator<W>>
 class cas_vector
-    : public vector_imp::vector<cas_vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val-1, true>
+  : public vector_imp::vector<cas_vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val-1, true>
 {
   typedef vector_imp::vector<cas_vector<IDX, BITS, W, Allocator>, IDX, BITS, W, Allocator, bitsof<W>::val-1, true> super;
 
- public:
+public:
   typedef typename super::iterator              iterator;
   typedef typename super::const_iterator        const_iterator;
   typedef IDX                                   value_type;
@@ -603,10 +461,10 @@ class cas_vector
   typedef W                                     word_type;
 
   cas_vector(size_t s, Allocator allocator = Allocator())
-      : super(BITS, s, allocator)
+    : super(BITS, s, allocator)
   { }
   cas_vector(Allocator allocator = Allocator())
-      : super(allocator)
+    : super(allocator)
   { }
 
   static constexpr unsigned bits() { return BITS; }
@@ -614,10 +472,10 @@ class cas_vector
 
 template<typename IDX, typename W, typename Allocator>
 class cas_vector<IDX, 0, W, Allocator>
-    : public vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val - 1, true>
+  : public vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val - 1, true>
 {
   typedef vector_imp::vector_dyn<IDX, W, Allocator, bitsof<W>::val - 1, true> super;
- public:
+public:
   typedef typename super::iterator              iterator;
   typedef typename super::const_iterator        const_iterator;
   typedef IDX                                   value_type;
@@ -633,13 +491,13 @@ class cas_vector<IDX, 0, W, Allocator>
   typedef W                                     word_type;
 
   cas_vector(unsigned b, size_t s, Allocator allocator = Allocator())
-      : super(b, s, allocator)
+    : super(b, s, allocator)
   {
     if(b > bitsof<W>::val - 1)
       throw std::out_of_range("Number of bits larger than usable bits");
   }
   cas_vector(unsigned b, Allocator allocator = Allocator())
-      : super(b, allocator)
+    : super(b, allocator)
   { }
 };
 

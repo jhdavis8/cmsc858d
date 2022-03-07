@@ -45,6 +45,7 @@ int main() {
   printf("Test complete. %f%% pass rate, %d pass, %d fail, %d total.\n",
          (double) (passes/tests)*100, passes, tests - passes, tests);
 
+  printf("Overhead: %lu bits\n", r.overhead());
   r.print_members();
   
   return 0;
