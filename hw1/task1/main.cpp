@@ -69,8 +69,8 @@ int main() {
          (double(passes)/double(tests))*100, passes, tests - passes, tests);
 
   printf("Overhead: %lu bits\n", r.overhead());
-  r.print_members();
-  r1.print_members();
+  //r.print_members();
+  //r1.print_members();
   
   return 0;
 }

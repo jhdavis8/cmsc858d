@@ -51,31 +51,25 @@ class rank_support {
   }
 
   uint64_t overhead() {
-    return 8*(sizeof(rank_support)) + ceil(log2(n))*ceil(n / s) + ceil(log2(s))*ceil(n / b);
+    return 8*(sizeof(rank_support)) + ceil(log2(n))*ceil(n / s) + ceil(log2(s))*ceil(n / b) + n;
   }
 
   void save(const std::string& fname) {
     std::ofstream outfile(fname);
     outfile << " " << n << " " << s << " " << b;
+    rs.serialize(outfile);
+    rb.serialize(outfile);
+    bv.serialize(outfile);
     outfile.close();
-    std::ofstream outfiles(fname + "s");
-    rs.serialize(outfiles);
-    outfiles.close();
-    std::ofstream outfileb(fname + "b");
-    rb.serialize(outfileb);
-    outfileb.close();
-    std::ofstream outfilev(fname + "v");
-    bv.serialize(outfilev);
-    outfilev.close();
   }
   
   void load(const std::string& fname) {
     std::ifstream infile(fname);
     infile >> n >> s >> b;
+    rs.deserialize(infile);
+    rb.deserialize(infile);
+    bv.deserialize(infile);
     infile.close();
-    rs.deserialize(fname + "s");
-    rb.deserialize(fname + "b");
-    bv.deserialize(fname + "v");
   }
   
   void print_members() {

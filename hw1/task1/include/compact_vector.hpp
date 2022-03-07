@@ -326,6 +326,45 @@ class vector {
     ifile.read(reinterpret_cast<char*>(m_mem),
                sizeof(W) * elements_to_words(m_size, bits_per_element));
   }
+
+  void deserialize(std::ifstream& ifs)
+  {
+    bool mmap = false;
+    uint64_t bits_per_element{0}, w_size{0}, w_capacity{0};
+    deserialize(ifs, mmap, bits_per_element, w_size, w_capacity);
+  }
+
+  void deserialize( std::ifstream& ifile, bool mmap,
+                    uint64_t& bits_per_element, uint64_t& w_size, uint64_t& w_capacity) {
+    std::error_code error;
+    // load the vector by reading from file
+    uint64_t static_flag{0};
+    ifile.read(reinterpret_cast<char*>(&static_flag),
+               sizeof(static_flag));
+
+    ifile.read(reinterpret_cast<char*>(&bits_per_element),
+               sizeof(bits_per_element));
+
+    //std::cerr<< "bits / element = " << bits_per_element << "\n";
+
+    ifile.read(reinterpret_cast<char*>(&w_size), sizeof(w_size));
+    m_size = w_size;
+    //std::cerr << "size = " << m_size << "\n";
+
+    ifile.read(reinterpret_cast<char*>(&w_capacity),
+               sizeof(w_capacity));
+    m_capacity = w_capacity;
+    //std::cerr<< "capacity = " << m_capacity << "\n";
+
+    m_allocator.deallocate(m_mem,
+                           elements_to_words(m_capacity, bits()));
+    m_mem =
+        m_allocator.allocate(elements_to_words(m_capacity, bits_per_element));
+    if (m_mem == nullptr)
+      throw std::bad_alloc();
+    ifile.read(reinterpret_cast<char*>(m_mem),
+               sizeof(W) * elements_to_words(m_size, bits_per_element));
+  }
   
  protected:
   void enlarge(size_t given = 0) {
