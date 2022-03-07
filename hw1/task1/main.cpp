@@ -42,11 +42,35 @@ int main() {
   test_eq(r(61), scan(b,61), "61", tests, passes);
   test_eq(r(62), scan(b,62), "62", tests, passes);
 
+  r.save("rank-save-test.dat");
+  printf("Save done.\n");
+  bitvector c;
+  c.assign({1});
+  rank_support r1(c);
+  r1.load("rank-save-test.dat");
+  printf("Load done.\n");
+  
+  test_eq(r1(0), scan(b,0), "0", tests, passes);
+  test_eq(r1(1), scan(b,1), "1", tests, passes);
+  test_eq(r1(4), scan(b,4), "4", tests, passes);
+  test_eq(r1(8), scan(b,8), "8", tests, passes);
+  test_eq(r1(19), scan(b,19), "19", tests, passes);
+  test_eq(r1(35), scan(b,35), "35", tests, passes);
+  test_eq(r1(36), scan(b,36), "36", tests, passes);
+  test_eq(r1(37), scan(b,37), "37", tests, passes);
+  test_eq(r1(43), scan(b,43), "43", tests, passes);
+  test_eq(r1(50), scan(b,50), "50", tests, passes);
+  test_eq(r1(52), scan(b,52), "52", tests, passes);
+  test_eq(r1(60), scan(b,60), "60", tests, passes);
+  test_eq(r1(61), scan(b,61), "61", tests, passes);
+  test_eq(r1(62), scan(b,62), "62", tests, passes);
+  
   printf("Test complete. %f%% pass rate, %d pass, %d fail, %d total.\n",
-         (double) (passes/tests)*100, passes, tests - passes, tests);
+         (double(passes)/double(tests))*100, passes, tests - passes, tests);
 
   printf("Overhead: %lu bits\n", r.overhead());
   r.print_members();
+  r1.print_members();
   
   return 0;
 }

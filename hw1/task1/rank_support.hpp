@@ -3,8 +3,9 @@
 
 #include <string>
 #include <cstdio>
-#include <cmath>
-#include <bit>
+#include <cmath>         // for pow, ceil, log2
+#include <bit>           // for popcount
+#include <algorithm>     // for max
 #include <compact_vector.hpp>
 
 #define bitvector compact::vector<unsigned long,1>
@@ -14,15 +15,16 @@ class rank_support {
   uint64_t n;
   uint64_t s;
   uint64_t b;
-  const bitvector& bv;
+  bitvector bv;
   comvector rs;
   comvector rb;
   
- public:
+ public:  
   rank_support(const bitvector& b_in)
-      : n(b_in.size()), bv(b_in), s(pow(ceil(log2(n)), 2)),
+      : n(b_in.size()), bv(b_in),
+        s(std::max(1.0,pow(ceil(log2(n)), 2))),
         rs(comvector(ceil(log2(n)), ceil(n / s))),
-        b(ceil(log2(n))),
+        b(std::max(1.0,ceil(log2(n)))),
         rb(comvector(ceil(log2(s)), ceil(n / b))) {
     auto scan = std::vector<unsigned long>(n);
     for (uint64_t i = 0; i < n; i++) {
@@ -52,27 +54,33 @@ class rank_support {
     return 8*(sizeof(rank_support)) + ceil(log2(n))*ceil(n / s) + ceil(log2(s))*ceil(n / b);
   }
 
-  void save(std::string& fname) {
+  void save(const std::string& fname) {
     std::ofstream outfile(fname);
-    outfile << n << s << b;
-    rs.serialize(outfile);
-    rb.serialize(outfile);
+    outfile << " " << n << " " << s << " " << b;
     outfile.close();
+    std::ofstream outfiles(fname + "s");
+    rs.serialize(outfiles);
+    outfiles.close();
+    std::ofstream outfileb(fname + "b");
+    rb.serialize(outfileb);
+    outfileb.close();
+    std::ofstream outfilev(fname + "v");
+    bv.serialize(outfilev);
+    outfilev.close();
   }
   
-  void load(std::string& fname) {
+  void load(const std::string& fname) {
     std::ifstream infile(fname);
     infile >> n >> s >> b;
-    rs = comvector(ceil(log2(n)), 1);
-    rs.deserialize(infile);
-    rb = comvector(ceil(log2(s)), 1);
-    rb.deserialize(infile);
     infile.close();
+    rs.deserialize(fname + "s");
+    rb.deserialize(fname + "b");
+    bv.deserialize(fname + "v");
   }
   
   void print_members() {
     for (uint64_t i = 0; i < n; i++) {
-      printf("%lu ", bv[i]);
+      printf("%lu ", (unsigned long) bv[i]);
     }
     printf("\n");
     for (uint64_t i = 0; i < n; i++) {

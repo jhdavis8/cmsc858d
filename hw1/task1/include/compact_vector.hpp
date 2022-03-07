@@ -284,7 +284,7 @@ class vector {
     uint64_t w_capacity = m_capacity;
     of.write(reinterpret_cast<char *>(&w_capacity), sizeof(w_capacity));
     of.write(reinterpret_cast<char *>(m_mem), bytes());
-    // std::cerr << "wrote " << bytes() << " bytes of data at the end\n";
+    //std::cerr << "wrote " << bytes() << " bytes of data at the end\n";
   }
 
   void deserialize(const std::string &fname)
@@ -306,16 +306,16 @@ class vector {
     ifile.read(reinterpret_cast<char*>(&bits_per_element),
                sizeof(bits_per_element));
 
-    // std::cerr<< "bits / element = " << bits_per_element << "\n";
+    //std::cerr<< "bits / element = " << bits_per_element << "\n";
 
     ifile.read(reinterpret_cast<char*>(&w_size), sizeof(w_size));
     m_size = w_size;
-    std::cerr << "size = " << m_size << "\n";
+    //std::cerr << "size = " << m_size << "\n";
 
     ifile.read(reinterpret_cast<char*>(&w_capacity),
                sizeof(w_capacity));
     m_capacity = w_capacity;
-    // std::cerr<< "capacity = " << m_capacity << "\n";
+    //std::cerr<< "capacity = " << m_capacity << "\n";
 
     m_allocator.deallocate(m_mem,
                            elements_to_words(m_capacity, bits()));
@@ -327,45 +327,6 @@ class vector {
                sizeof(W) * elements_to_words(m_size, bits_per_element));
   }
   
-  void deserialize(std::ifstream &ifs)
-  {
-    bool mmap = false;
-    uint64_t bits_per_element{0}, w_size{0}, w_capacity{0};
-    deserialize(ifs, mmap, bits_per_element, w_size, w_capacity);
-  }
-
-  void deserialize( std::ifstream &ifile, bool mmap,
-                    uint64_t& bits_per_element, uint64_t& w_size, uint64_t& w_capacity) {
-    std::error_code error;
-    // load the vector by reading from file
-    uint64_t static_flag{0};
-    ifile.read(reinterpret_cast<char*>(&static_flag),
-               sizeof(static_flag));
-
-    ifile.read(reinterpret_cast<char*>(&bits_per_element),
-               sizeof(bits_per_element));
-
-    // std::cerr<< "bits / element = " << bits_per_element << "\n";
-
-    ifile.read(reinterpret_cast<char*>(&w_size), sizeof(w_size));
-    m_size = w_size;
-    std::cerr << "size = " << m_size << "\n";
-
-    ifile.read(reinterpret_cast<char*>(&w_capacity),
-               sizeof(w_capacity));
-    m_capacity = w_capacity;
-    // std::cerr<< "capacity = " << m_capacity << "\n";
-
-    m_allocator.deallocate(m_mem,
-                           elements_to_words(m_capacity, bits()));
-    m_mem =
-        m_allocator.allocate(elements_to_words(m_capacity, bits_per_element));
-    if (m_mem == nullptr)
-      throw std::bad_alloc();
-    ifile.read(reinterpret_cast<char*>(m_mem),
-               sizeof(W) * elements_to_words(m_size, bits_per_element));
-  }
-
  protected:
   void enlarge(size_t given = 0) {
     const size_t new_capacity = !given ? std::max(m_capacity * 2, (size_t)(bitsof<W>::val / bits() + 1)) : given;
@@ -382,7 +343,7 @@ class vector_dyn
     : public vector_imp::vector<vector_dyn<IDX, W, Allocator, UB, TS>, IDX, 0, W, Allocator, UB, TS>
 {
   typedef vector_imp::vector<vector_dyn<IDX, W, Allocator, UB, TS>, IDX, 0, W, Allocator, UB, TS> super;
-  const unsigned m_bits;    // Number of bits in an element
+  unsigned m_bits;    // Number of bits in an element
 
  public:
   typedef typename super::iterator              iterator;
@@ -421,35 +382,37 @@ class vector_dyn
   inline unsigned bits() const { return m_bits; }
 
   vector_dyn& operator=(const vector_dyn& rhs) {
-    if(bits() != rhs.bits())
+    if(bits() != rhs.bits()) {
+      std::cerr << "bits = " << bits() << " rhs = " << rhs.bits() << std::endl;
       throw std::invalid_argument("Bit length of compacted vector differ");
+    }
     static_cast<super*>(this)->operator=(rhs);
     return *this;
   }
 
   vector_dyn& operator=(vector_dyn&& rhs) {
-    if(bits() != rhs.bits())
+    if(bits() != rhs.bits()) {
+      std::cerr << "bits = " << bits() << " rhs = " << rhs.bits() << std::endl;
       throw std::invalid_argument("Bit length of compacted vector differ");
+    }
     static_cast<super*>(this)->operator=(std::move(rhs));
     return *this;
   }
 
-  //void set_m_bits(size_t m) { m_bits = m; }
-  // m_bits is const so we have to rely on the user
-  // to set up the vector with the right bit width
+  void set_m_bits(size_t m) { m_bits = m; }
 
   void deserialize(const std::string& fname) {
     bool mmap = false;
     uint64_t bits_per_element, w_size, w_capacity;
     static_cast<super*>(this)->deserialize(fname, mmap, bits_per_element, w_size, w_capacity);
-    //set_m_bits(bits_per_element);
+    set_m_bits(bits_per_element);
   }
 
   void deserialize(std::ifstream& ifs) {
     bool mmap = false;
     uint64_t bits_per_element, w_size, w_capacity;
     static_cast<super*>(this)->deserialize(ifs, mmap, bits_per_element, w_size, w_capacity);
-    //set_m_bits(bits_per_element);
+    set_m_bits(bits_per_element);
   }
 };
 
