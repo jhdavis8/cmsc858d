@@ -7,10 +7,10 @@
 void test_eq(uint64_t a, uint64_t e, const std::string& name, int& tests, int& passes) {
   assert(name.size() < 35);
   if (a != e) {
-    printf("%-35sFAIL      expected %lu, got %lu\n", name.c_str(), e, a);
+    printf("%-10sFAIL      expected %lu, got %lu\n", name.c_str(), e, a);
     tests++;
   } else {
-    printf("%-35sPASS      got %lu\n", name.c_str(), a);
+    printf("%-10sPASS      got %lu\n", name.c_str(), a);
     passes++;
     tests++;
   }
@@ -30,7 +30,7 @@ void benchmark(uint64_t size, uint64_t ops) {
   }
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
   double ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-  printf("Benchmark N = %lu, ops = %lu: Memory overhead = %lu bits, runtime %f ms.\n",
+  printf("Benchmark N = %10lu, ops = %10lu: Memory overhead = %10lu bits, runtime %10f ms.\n",
          size, ops, r.overhead(), ms);
 }
 
@@ -42,9 +42,8 @@ uint64_t scan(const bitvector& b, uint64_t ind) {
 
 int main() {
   srand(time(NULL));
-  /*
   std::string n("NAME");
-  printf("%-35sRESULT    DETAILS\n", n.c_str());
+  printf("%-10sRESULT    DETAILS\n", n.c_str());
   int passes = 0, tests = 0;
 
   bitvector b;
@@ -90,27 +89,30 @@ int main() {
   
   printf("Test complete. %f%% pass rate, %d pass, %d fail, %d total.\n",
          (double(passes)/double(tests))*100, passes, tests - passes, tests);
-  */
   
-  //printf("Overhead: %lu bits\n", r.overhead());
+  printf("Overhead: %lu bits\n", r.overhead());
   //r.print_members();
   //r1.print_members();
 
-  benchmark(100, 100000);
-  benchmark(200, 100000);
-  benchmark(400, 100000);
-  benchmark(800, 100000);
-  benchmark(1600, 100000);
-  benchmark(3200, 100000);
-  benchmark(6400, 100000);
-  benchmark(12800, 100000);
-  benchmark(25600, 100000);
-  benchmark(51200, 100000);
-  benchmark(102400, 100000);
-  benchmark(204800, 100000);
-  benchmark(409600, 100000);
-  benchmark(819200, 100000);
-  benchmark(1638400, 100000);
+  benchmark(100, 1000000);
+  benchmark(200, 1000000);
+  benchmark(400, 1000000);
+  benchmark(800, 1000000);
+  benchmark(1600, 1000000);
+  benchmark(3200, 1000000);
+  benchmark(6400, 1000000);
+  benchmark(12800, 1000000);
+  benchmark(25600, 1000000);
+  benchmark(51200, 1000000);
+  benchmark(102400, 1000000);
+  benchmark(204800, 1000000);
+  benchmark(409600, 1000000);
+  benchmark(819200, 1000000);
+  benchmark(1638400, 1000000);
+  benchmark(3276800, 1000000);
+  benchmark(6553600, 1000000);
+  benchmark(3276800, 1000000);
+  benchmark(13107200, 1000000);
   
   return 0;
 }
