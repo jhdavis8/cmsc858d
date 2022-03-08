@@ -93,18 +93,18 @@ int main() {
   printf("%lu\n", s.num_elem());
   */
   
-  benchmark(10, 100000, 1000);
-  benchmark(100, 100000, 10000);
-  benchmark(1000, 100000, 100000);
-  benchmark(10000, 100000, 1000000);
-  benchmark(50, 100000, 1000);
-  benchmark(500, 100000, 10000);
-  benchmark(5000, 100000, 100000);
-  benchmark(50000, 100000, 1000000);
-  benchmark(100, 100000, 1000);
-  benchmark(1000, 100000, 10000);
-  benchmark(10000, 100000, 100000);
-  benchmark(100000, 100000, 1000000);
+  benchmark(10, 1000000, 1000);
+  benchmark(100, 1000000, 10000);
+  benchmark(1000, 1000000, 100000);
+  benchmark(10000, 1000000, 1000000);
+  benchmark(50, 1000000, 1000);
+  benchmark(500, 1000000, 10000);
+  benchmark(5000, 1000000, 100000);
+  benchmark(50000, 1000000, 1000000);
+  benchmark(100, 1000000, 1000);
+  benchmark(1000, 1000000, 10000);
+  benchmark(10000, 1000000, 100000);
+  benchmark(100000, 1000000, 1000000);
   
   return 0;
 }
