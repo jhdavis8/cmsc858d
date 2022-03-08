@@ -12,6 +12,7 @@
 #define comvector compact::vector<unsigned long>
 
 class rank_support {
+ public:  
   uint64_t n;
   uint64_t s;
   uint64_t b;
@@ -19,7 +20,6 @@ class rank_support {
   comvector rs;
   comvector rb;
   
- public:  
   rank_support(const bitvector& b_in)
       : n(b_in.size()), bv(b_in),
         s(std::max(1.0,pow(ceil(log2(n)), 2))),
