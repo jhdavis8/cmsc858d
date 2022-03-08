@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Program object saves
+*.dat
+
+# Emacs buffers
+*~
