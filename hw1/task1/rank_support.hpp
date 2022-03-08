@@ -23,14 +23,30 @@ class rank_support {
   rank_support(const bitvector& b_in)
       : n(b_in.size()), bv(b_in),
         s(std::max(1.0,pow(ceil(log2(n)), 2))),
-        rs(comvector(ceil(log2(n)), ceil(n / s))),
+        rs(comvector(ceil(log2(n)), ceil(double(n) / double(s)))),
         b(std::max(1.0,ceil(log2(n)))),
-        rb(comvector(ceil(log2(s)), ceil(n / b))) {
+        rb(comvector(ceil(log2(s)), ceil(double(n) / double(b)))) {
+
+    /*
+    printf("Contructing rank_support:\n");
+    printf("n = %lu\n", n);
+    printf("s = %lu\n", s);
+    printf("b = %lu\n", b);
+    printf("rs.len = %f\n", ceil(double(n) / double(s)));
+    printf("rs.wid = %f\n", pow(ceil(log2(n)), 2));
+    printf("rb.len = %f\n", ceil(double(n) / double(b)));
+    printf("rb.wid = %f\n", ceil(log2(n)));
+    */
+
     auto scan = std::vector<unsigned long>(n);
     for (uint64_t i = 0; i < n; i++) {
       scan[i] = bv[i] + ((i == 0) ? 0 : scan[i-1]);
       if (i % s == 0) rs[i/s] = ((i == 0) ? 0 : scan[i-1]);
-      if (i % b == 0) rb[i/b] = ((i == 0) ? 0 : scan[i-1] - rs[i/s]);
+      if (i % b == 0) {
+        // printf("rb write. i = %lu, s = %lu, rs_ind = %lu, rs_max = %f\n",
+        //       i, s, i/s, ceil(n / s) - 1);
+        rb[i/b] = ((i == 0) ? 0 : scan[i-1] - rs[i/s]);
+      }
     }
   }
 
@@ -40,6 +56,12 @@ class rank_support {
     uint64_t my_b = floor(ind / b);
     uint64_t block_start = my_b*b;
     uint64_t block_content = 0;
+    /*
+    printf("Computing rank:\n");
+    printf("my_s = %lu\n", my_s);
+    printf("my_b = %lu\n", my_b);
+    printf("block_start = %lu\n", block_start);
+    */
     for (uint64_t i = 0; i <= ind - block_start; i++) {
       block_content |= bv[block_start+i] << i;
     }

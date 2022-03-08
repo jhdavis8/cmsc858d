@@ -62,7 +62,8 @@ class vector {
   static W* allocate_s(size_t capacity, unsigned bits, Allocator& allocator) {
     const auto nb_words = elements_to_words(capacity, bits);
     W* res = allocator.allocate(nb_words);
-    if(UB != bitsof<W>::val) // CAS vector, expect high bit of each word to be zero, so zero it all
+    //if(UB != bitsof<W>::val) // CAS vector, expect high bit of each word to be zero, so zero it all
+    // Josh: removed the above to clean up valgrind output for now
       std::fill_n(res, nb_words, (W)0);
     return res;
   }
@@ -257,13 +258,6 @@ class vector {
   static constexpr unsigned static_bits() { return BITS; }
   static constexpr unsigned used_bits() { return UB; }
   static constexpr bool thread_safe() { return TS; }
-
-  // set all values in the vector to 0
-  // *Note* : would be nice to have the constructor
-  // optionally take a value to fill in or use a default ...
-  inline void clear_mem() {
-    std::memset(this->get(), 0, this->capacity_bytes());
-  }
 
   void serialize(std::ofstream &of)
   {
