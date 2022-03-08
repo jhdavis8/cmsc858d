@@ -41,6 +41,11 @@ class select_support {
     return 8*(sizeof(select_support)) + r.overhead() - 8*(sizeof(rank_support));
   }
   
-  void save(const std::string& fname) {}
-  void load(const std::string& fname) {}
+  void save(const std::string& fname) {
+    r.save(fname);
+  }
+  
+  void load(const std::string& fname) {
+    r.load(fname);
+  }
 };

@@ -65,61 +65,64 @@ int main() {
   test_eq(s(19), nsel(b,19), "19", tests, passes);
   test_eq(s(21), nsel(b,21), "21", tests, passes);
   test_eq(s(25), nsel(b,25), "25", tests, passes);
+  test_eq(s(26), nsel(b,26), "26", tests, passes);
   test_eq(s(27), nsel(b,27), "27", tests, passes);
+  test_eq(s(28), nsel(b,28), "28", tests, passes);
+  test_eq(s(29), nsel(b,29), "29", tests, passes);
   test_eq(s(30), nsel(b,30), "30", tests, passes);
+  test_eq(s(31), nsel(b,31), "31", tests, passes);
   test_eq(s(34), nsel(b,34), "34", tests, passes);
 
-  /*
-  r.save("rank-save-test.dat");
+  s.save("select-save-test.dat");
   printf("Save done.\n");
   bitvector c;
   c.assign({1});
   rank_support r1(c);
-  r1.load("rank-save-test.dat");
+  select_support s1(r1);
+  s1.load("select-save-test.dat");
   printf("Load done.\n");
   
-  test_eq(s1(0), nsel(b,0), "0", tests, passes);
-  test_eq(s1(1), nsel(b,1), "1", tests, passes);
-  test_eq(s1(4), nsel(b,4), "4", tests, passes);
-  test_eq(s1(8), nsel(b,8), "8", tests, passes);
-  test_eq(s1(9), nsel(b,9), "9", tests, passes);
-  test_eq(s1(12), nsel(b,12), "12", tests, passes);
-  test_eq(s1(19), nsel(b,19), "19", tests, passes);
-  test_eq(s1(21), nsel(b,21), "21", tests, passes);
-  test_eq(s1(25), nsel(b,25), "25", tests, passes);
-  test_eq(s1(27), nsel(b,27), "27", tests, passes);
-  test_eq(s1(30), nsel(b,30), "30", tests, passes);
-  test_eq(s1(34), nsel(b,34), "34", tests, passes);
-  */
+  test_eq(s(0), nsel(b,0), "0", tests, passes);
+  test_eq(s(1), nsel(b,1), "1", tests, passes);
+  test_eq(s(4), nsel(b,4), "4", tests, passes);
+  test_eq(s(8), nsel(b,8), "8", tests, passes);
+  test_eq(s(9), nsel(b,9), "9", tests, passes);
+  test_eq(s(12), nsel(b,12), "12", tests, passes);
+  test_eq(s(19), nsel(b,19), "19", tests, passes);
+  test_eq(s(21), nsel(b,21), "21", tests, passes);
+  test_eq(s(25), nsel(b,25), "25", tests, passes);
+  test_eq(s(26), nsel(b,26), "26", tests, passes);
+  test_eq(s(27), nsel(b,27), "27", tests, passes);
+  test_eq(s(28), nsel(b,28), "28", tests, passes);
+  test_eq(s(29), nsel(b,29), "29", tests, passes);
+  test_eq(s(30), nsel(b,30), "30", tests, passes);
+  test_eq(s(31), nsel(b,31), "31", tests, passes);
+  test_eq(s(34), nsel(b,34), "34", tests, passes);
   
   printf("Test complete. %f%% pass rate, %d pass, %d fail, %d total.\n",
          (double(passes)/double(tests))*100, passes, tests - passes, tests);
   
   printf("Overhead: %lu bits\n", s.overhead());
-  //r.print_members();
-  //r1.print_members();
 
-  /*
-  benchmark(100, 1000000);
-  benchmark(200, 1000000);
-  benchmark(400, 1000000);
-  benchmark(800, 1000000);
-  benchmark(1600, 1000000);
-  benchmark(3200, 1000000);
-  benchmark(6400, 1000000);
-  benchmark(12800, 1000000);
-  benchmark(25600, 1000000);
-  benchmark(51200, 1000000);
-  benchmark(102400, 1000000);
-  benchmark(204800, 1000000);
-  benchmark(409600, 1000000);
-  benchmark(819200, 1000000);
-  benchmark(1638400, 1000000);
-  benchmark(3276800, 1000000);
-  benchmark(6553600, 1000000);
-  benchmark(3276800, 1000000);
-  benchmark(13107200, 1000000);
-  */
+  benchmark(100, 100000);
+  benchmark(200, 100000);
+  benchmark(400, 100000);
+  benchmark(800, 100000);
+  benchmark(1600, 100000);
+  benchmark(3200, 100000);
+  benchmark(6400, 100000);
+  benchmark(12800, 100000);
+  benchmark(25600, 100000);
+  benchmark(51200, 100000);
+  benchmark(102400, 100000);
+  benchmark(204800, 100000);
+  benchmark(409600, 100000);
+  benchmark(819200, 100000);
+  benchmark(1638400, 100000);
+  benchmark(3276800, 100000);
+  benchmark(6553600, 100000);
+  benchmark(3276800, 100000);
+  benchmark(13107200, 100000);
   
   return 0;
 }
