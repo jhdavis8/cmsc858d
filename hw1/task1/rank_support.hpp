@@ -38,59 +38,17 @@ class rank_support {
     }
   }
 
-  /*
-  void rebuild(const bitvector& b_in) {
-    n = b_in.size();
-    bv.resize(1,n);
-    bv = b_in;
-    s = std::max(1.0,pow(ceil(log2(n)), 2));
-    rs = comvector(ceil(log2(n)), ceil(double(n) / double(s)));
-    printf("rs size is %lu\n", rs.size());
-    b = std::max(1.0,ceil(log2(n)));
-    rb = comvector(ceil(log2(s)), ceil(double(n) / double(b)));
-    printf("Rank support rebuild:\n");
-    printf("n = %lu\n", n);
-    printf("s = %lu\n", s);
-    printf("b = %lu\n", b);
-    auto scan = std::vector<unsigned long>(n);
-    for (uint64_t i = 0; i < n; i++) {
-      scan[i] = bv[i] + ((i == 0) ? 0 : scan[i-1]);
-      if (i % s == 0) rs[i/s] = ((i == 0) ? 0 : scan[i-1]);
-      if (i % b == 0) rb[i/b] = ((i == 0) ? 0 : scan[i-1] - rs[i/s]);
-    }
-  }
-
-  void rescan(const bitvector& b_in) {
-    bv = b_in;
-    auto scan = std::vector<unsigned long>(n);
-    for (uint64_t i = 0; i < n; i++) {
-      scan[i] = bv[i] + ((i == 0) ? 0 : scan[i-1]);
-      if (i % s == 0) {
-        //printf("Rescan s set, i = %lu, s = %lu... ", i, s);
-        rs[i/s] = ((i == 0) ? 0 : scan[i-1]);
-        printf("rs at %lu is now %lu ", i/s, (uint64_t) rs[i/s]);
-        printf("...and rs[0] is %lu\n", (uint64_t) rs[0]);
-      }
-      if (i % b == 0) {
-        rb[i/b] = ((i == 0) ? 0 : scan[i-1] - rs[i/s]);
-      }
-    }
-  }
-  */
-  
-  /*
   void insert(uint64_t ind) {
     bv[ind] = 1;
-    printf("Loop from %lu to %lu in rs\n", (ind / s) + 1, (uint64_t) ceil(double(n) / double(s)));
+    //printf("Loop from %lu to %lu in rs\n", (ind / s) + 1, (uint64_t) ceil(double(n) / double(s)));
     for (uint64_t i = (ind / s) + 1; i < ceil(double(n) / double(s)); i++) {
       rs[i] = rs[i] + 1;
     }
-    printf("Loop from %lu to %lu in rb\n", (ind / b) + 1, (ind / b) + 1 + (s / b));
+    //printf("Loop from %lu to %lu in rb\n", (ind / b) + 1, (ind / b) + 1 + (s / b));
     for (uint64_t i = (ind / b) + 1; i < (ind / b) + 1 + (s / b); i++) {
-      if (i / (s / b) == ind / s) rb[i] = rb[i] + 1;
+      if (i / (s / b) == ind / s && i < ceil(double(n) / double(b))) rb[i] = rb[i] + 1;
     }
   }
-  */
 
   uint64_t rank1(uint64_t ind) {
     if (ind >= n) printf("ERROR: invalid index to call rank on\n");

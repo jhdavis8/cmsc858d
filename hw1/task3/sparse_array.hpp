@@ -27,20 +27,20 @@ class sparse_array {
     vals.resize(0);
   }
   
-  void append(std::string elem, uint64_t pos) {
+  bool append(std::string elem, uint64_t pos) {
     if (pos >= sz) {
       printf("ERROR: cannot insert beyond size.\n");
-      return;
+      return false;
     } else if (bv[pos] == 1) {
-      printf("ERROR: cannot insert to location with exisitng element.\n");
-      return;
+      //printf("ERROR: cannot insert to location with exisitng element.\n");
+      return false;
     }
     bv[pos] = 1;
-    //(*ranksup).insert(pos);
-    ranksup = new rank_support(bv);
-    //printf("Begin of superblock in rs is %lu\n", (uint64_t) (*ranksup).rs[0]);
+    (*ranksup).insert(pos);
+    //ranksup = new rank_support(bv);
     vals.push_back(elem);
     nval++;
+    return true;
   }
   
   bool get_at_rank(uint64_t r, std::string& elem) {
