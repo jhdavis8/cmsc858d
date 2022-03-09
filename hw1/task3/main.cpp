@@ -4,7 +4,7 @@
 #include <ctime>
 #include "sparse_array.hpp"
 
-void benchmark(uint64_t size, uint64_t ops, uint64_t maxsize) {
+void benchmark_get_at_rank(uint64_t size, uint64_t ops, uint64_t maxsize) {
   sparse_array sp(maxsize);
   uint64_t conflicts = 0;
   for (int i = 0; i < size; i++) {
@@ -23,6 +23,60 @@ void benchmark(uint64_t size, uint64_t ops, uint64_t maxsize) {
   printf("Benchmark N = %10lu, ops = %10lu: Runtime %10f ms.\n",
          size, ops, ms);
 }
+
+void benchmark_get_at_index(uint64_t size, uint64_t ops, uint64_t maxsize) {
+  sparse_array sp(maxsize);
+  uint64_t conflicts = 0;
+  for (int i = 0; i < size; i++) {
+    uint64_t ind = rand() % maxsize;
+    if (!sp.append("elm", ind)) conflicts++;
+  }
+  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+  volatile bool result;
+  std::string stres;
+  for (int i = 0; i < ops; i++) {
+    uint64_t ind = rand() % (maxsize);
+    result = sp.get_at_index(ind, stres);
+  }
+  std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+  double ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  printf("Benchmark N = %10lu, ops = %10lu: Runtime %10f ms.\n",
+         size, ops, ms);
+}
+
+void benchmark_num_elem_at(uint64_t size, uint64_t ops, uint64_t maxsize) {
+  sparse_array sp(maxsize);
+  uint64_t conflicts = 0;
+  for (int i = 0; i < size; i++) {
+    uint64_t ind = rand() % maxsize;
+    if (!sp.append("elm", ind)) conflicts++;
+  }
+  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+  volatile uint64_t result;
+  std::string stres;
+  for (int i = 0; i < ops; i++) {
+    uint64_t ind = rand() % (maxsize);
+    result = sp.num_elem_at(ind);
+  }
+  std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+  double ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  printf("Benchmark N = %10lu, ops = %10lu: Runtime %10f ms.\n",
+         size, ops, ms);
+}
+
+void benchmark(uint64_t size, uint64_t ops, uint64_t maxsize) {
+  sparse_array sp(maxsize);
+  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
+  for (int i = 0; i < size; i++) {
+    uint64_t ind = rand() % maxsize;
+    sp.append("elm", ind);
+  }
+  std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+  double ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  printf("Benchmark N = %10lu, ops = %10lu: Runtime %10f ms.\n",
+         size, ops, ms);
+}
+
 
 int main() {
   srand(time(NULL));
@@ -93,18 +147,18 @@ int main() {
   printf("%lu\n", s.num_elem());
   */
   
-  benchmark(10, 1000000, 1000);
-  benchmark(100, 1000000, 10000);
-  benchmark(1000, 1000000, 100000);
-  benchmark(10000, 1000000, 1000000);
-  benchmark(50, 1000000, 1000);
-  benchmark(500, 1000000, 10000);
-  benchmark(5000, 1000000, 100000);
-  benchmark(50000, 1000000, 1000000);
-  benchmark(100, 1000000, 1000);
-  benchmark(1000, 1000000, 10000);
-  benchmark(10000, 1000000, 100000);
-  benchmark(100000, 1000000, 1000000);
+  benchmark(10, 5000000, 1000);
+  benchmark(100, 5000000, 10000);
+  benchmark(1000, 5000000, 100000);
+  benchmark(10000, 5000000, 1000000);
+  benchmark(50, 5000000, 1000);
+  benchmark(500, 5000000, 10000);
+  benchmark(5000, 5000000, 100000);
+  benchmark(50000, 5000000, 1000000);
+  benchmark(100, 5000000, 1000);
+  benchmark(1000, 5000000, 10000);
+  benchmark(10000, 5000000, 100000);
+  benchmark(100000, 5000000, 1000000);
   
   return 0;
 }
