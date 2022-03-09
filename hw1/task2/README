@@ -1,0 +1,10 @@
+Type "make" to build.
+
+The following functions are defined:
+
+select_support(const rank_support& r_in): construct a select support object, takes a reference to a rank support object.
+uint64_t select1(uint64_t ind): returns the index of the ind-th 1 in the bitvector
+uint64_t operator()(uint64_t ind): a simple operator overload for parens which wraps select1
+uint64_t overhead(): returns the number of bits used to store this select support object
+void save(const std::string& fname): save this select support object to disk to a file called fname
+void load(const std::string& fname): load data into this select support object from a file called fname
