@@ -1,0 +1,9 @@
+[submodule "hw2/sdsl-lite"]
+	path = hw2/sdsl-lite
+	url = git@github.com:simongog/sdsl-lite.git
+[submodule "hw2/cereal"]
+	path = hw2/cereal
+	url = git@github.com:USCiLab/cereal.git
+[submodule "hw2/FastaReader"]
+	path = hw2/FastaReader
+	url = git@github.com:dlaperriere/FastaReader.git

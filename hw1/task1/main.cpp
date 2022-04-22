@@ -111,7 +111,6 @@ int main() {
   benchmark(1638400, 1000000);
   benchmark(3276800, 1000000);
   benchmark(6553600, 1000000);
-  benchmark(3276800, 1000000);
   benchmark(13107200, 1000000);
   
   return 0;
