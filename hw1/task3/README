@@ -1,0 +1,13 @@
+Type "make" to build.
+
+sparse_array(uint64_t s): construct a sparse array of size s
+~sparse_array(): destruct the sparse object
+void create(uint64_t s): build an existing sparse array object such that it has size s
+bool append(std::string elem, uint64_t pos): insert string elem to position pos in the sparse array, returns true if successful. Fails if the space is already occupied or pos is out of bounds.
+bool get_at_rank(uint64_t r, std::string& elem): place a reference to the string that has rank r in the sparse array into elem, returns true if successful.
+bool get_at_index(uint64_t r, std::string& elem): place a reference to the string at index r in the sparse array into elem, returns true if successful.
+uint64_t num_elem_at(uint64_t r): returns the count of present elements (1s in the bit vector) up to and including index r.
+uint64_t size(): returns the size of the sparse array.
+uint64_t num_elem(): returns the number of elements added to the sparse array.
+void save(const std::string& fname): save the sparse array object to disk with the filename fname
+void load(const std::string& fname): load data into the sparse array object from disk, filename fname.
