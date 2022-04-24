@@ -7,3 +7,6 @@ cmake ..
 make
 
 ctest
+
+cd ../sdsl-lite
+./install.sh ..
