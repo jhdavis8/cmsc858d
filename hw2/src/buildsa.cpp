@@ -1,9 +1,12 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 #include "FastaReader.hpp"
 #include "sdsl/qsufsort.hpp"
+#include "cereal/archives/binary.hpp"
+#include <cereal/types/string.hpp>
 
 int main(int argc, char* argv[]) {
   // Process command line arguments
@@ -42,5 +45,11 @@ int main(int argc, char* argv[]) {
   c_ref.push_back('\0');
   sdsl::qsufsort::construct_sa(sa, c_ref);
 
+  // Write suffix array to disk using cereal and sdsl built-in serialization
+  std::ofstream os(outp, std::ios::binary);
+  cereal::BinaryOutputArchive archive(os);
+  archive(full_ref);
+  sa.serialize(os);
+  
   return 0;
 }
