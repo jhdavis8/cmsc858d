@@ -2,6 +2,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "FastaReader.hpp"
 
 int main(int argc, char* argv[]) {
   if (argc < 3 || argc > 5) {
@@ -23,6 +24,14 @@ int main(int argc, char* argv[]) {
   }
   ref = argv[1 + aoff];
   outp = argv[2 + aoff];
+
+  std::string full_ref;
+  FastaReader fr(ref);
+  while (fr.hasNextSequence()) {
+    fr.readSequence();
+    std::string seq = fr.Sequence();
+    full_ref.append(seq);
+  }
 
   return 0;
 }

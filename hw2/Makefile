@@ -6,4 +6,4 @@ clean:
 	rm buildsa querysa
 
 buildsa: src/buildsa.cpp
-	g++ -g -std=c++20 -o buildsa src/buildsa.cpp
+	g++ -g -std=c++20 -o buildsa src/buildsa.cpp -lFastaReader -IFastaReader/include -LFastaReader/build/lib
