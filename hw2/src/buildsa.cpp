@@ -1,8 +1,11 @@
+// C++ standard lib includes
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
+
+// External lib includes
 #include "FastaReader.hpp"
 #include "sdsl/qsufsort.hpp"
 #include "cereal/archives/binary.hpp"
@@ -20,7 +23,6 @@ int main(int argc, char* argv[]) {
   std::string outp;
   int pref_len = -1;
   int aoff = 0;
-  
   if (std::string(argv[1]) == "--preftab") {
     std::istringstream ss(argv[2]);
     if (!(ss >> pref_len) || pref_len < 0) {
@@ -52,25 +54,15 @@ int main(int argc, char* argv[]) {
   if (pref_len > 0) {
     std::string curr_pref = full_ref.substr(sa[0], pref_len);
     int curr_itv_start = 0;
-    //std::cout << "Full text length: " << full_ref.length() << std::endl;
-    //std::cout << "First suffix pos: " << sa[0] << std::endl;
     for (int i = 0; i < sa.size(); i++) {
       std::string chk = full_ref.substr(sa[i], pref_len);
       if (chk != curr_pref || i == sa.size() - 1) {
-        //std::cout << curr_pref << " " << curr_itv_start << " " << i << " " << chk << ":" << sa[i] << std::endl;
         preftab.insert({curr_pref, {curr_itv_start, i}});
         curr_pref = chk;
         curr_itv_start = i;
       }
     }
   }
-
-  /*
-  std::cout << "Prefix table:" << std::endl;
-  for (const auto& [key, value] : preftab) {
-    std::cout << key << " " << value[0] << " " << value[1] << std::endl;
-  }
-  */
 
   // Write suffix array to disk using cereal and sdsl built-in serialization
   std::ofstream os(outp, std::ios::binary);
