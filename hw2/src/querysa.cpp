@@ -43,5 +43,13 @@ int main(int argc, char* argv[]) {
     archive_in(preftab);
   }
 
+  // Read queries and search
+  FastaReader fr(query_file);
+  while (fr.hasNextSequence()) {
+    fr.readSequence();
+    std::cout << fr.Id() << " " << fr.Description() << std::endl;
+    std::string query = fr.Sequence();
+  }
+
   return 0;
 }
