@@ -72,8 +72,15 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> results;
   for (int i = 0; i < queries.size(); i++) {
     std::string query = queries[i];
-    int l = 0;
-    int h = sa.size();
+    int l, h;
+    if (pref_len > 0) {
+      std::array<int, 2> pair = preftab.at(query.substr(0, preflen));
+      l = pair[0];
+      h = pair[1] - 1;
+    } else {
+      l = 0;
+      h = sa.size();
+    }
     int c = floor((l + h)/2);
     int loc = -1;
     while (loc < 0) {
