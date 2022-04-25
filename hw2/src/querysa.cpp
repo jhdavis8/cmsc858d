@@ -4,6 +4,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cmath>
+#include <algorithm>
 
 // External lib includes
 #include "FastaReader.hpp"
@@ -12,6 +14,14 @@
 #include "cereal/types/string.hpp"
 #include "cereal/types/unordered_map.hpp"
 #include "cereal/types/array.hpp"
+
+bool is_prefix(std::string prefix, std::string ref) {
+  return std::mismatch(prefix.begin(), prefix.end(), ref.begin(), ref.end()).first == prefix.end();
+}
+
+std::string suffix(std::string full, int start) {
+  return full.substr(start, full.length() - start);
+}
 
 int main(int argc, char* argv[]) {
   // Process command line arguments
@@ -47,9 +57,32 @@ int main(int argc, char* argv[]) {
   FastaReader fr(query_file);
   while (fr.hasNextSequence()) {
     fr.readSequence();
-    std::cout << fr.Id() << " " << fr.Description() << std::endl;
     std::string query = fr.Sequence();
+    int l = 0;
+    int h = sa.size();
+    int c = floor((l + h)/2);
+    int loc = -1;
+    while (loc < 0) {
+      int cmp = query.compare(suffix(full_ref, sa[c]));
+      if (cmp > 0) {
+        if (c == h - 1) {
+          loc = h;
+        }
+        l = c;
+      } else if (cmp < 0) {
+        if (c == l + 1) {
+          loc = c;
+        }
+        h = c;
+      }
+      c = floor((l + h)/2);
+    }
+    int matches = 0;
+    while (is_prefix(query, suffix(full_ref, sa[loc + matches]))) {
+      matches++;
+    }
+    //if (matches > 1) std::cout << fr.Id() << " " << fr.Description() << " Loc: " << loc << " Matches: " << matches << std::endl;
+    
   }
-
   return 0;
 }
