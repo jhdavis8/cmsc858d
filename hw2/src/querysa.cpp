@@ -53,12 +53,25 @@ int main(int argc, char* argv[]) {
     archive_in(preftab);
   }
 
-  // Read queries and search
-  std::vector<std::string> results;
+  // Read queries from file
+  std::vector<std::string> queries;
+  std::vector<std::string> descriptions;
   FastaReader fr(query_file);
   while (fr.hasNextSequence()) {
     fr.readSequence();
-    std::string query = fr.Sequence();
+    queries.push_back(fr.Sequence());
+    std::string des = fr.Id();
+    if (fr.Description().length() > 0 && fr.Description() != " ") {
+      des.append(" ");
+      des.append(fr.Description());
+    }
+    descriptions.push_back(des);
+  }
+
+  // Search for all queries and record in vector
+  std::vector<std::string> results;
+  for (int i = 0; i < queries.size(); i++) {
+    std::string query = queries[i];
     int l = 0;
     int h = sa.size();
     int c = floor((l + h)/2);
@@ -82,21 +95,17 @@ int main(int argc, char* argv[]) {
     while (is_prefix(query, suffix(full_ref, sa[loc + matches]))) {
       matches++;
     }
-    std::string to_write = fr.Id();
-    if (fr.Description().length() > 0 && fr.Description() != " ") {
-      to_write.append(" ");
-      to_write.append(fr.Description());
-    }
+    std::string to_write = descriptions[i];
     to_write.append("\t");
     to_write.append(std::to_string(matches));
-    for (int i = 0; i < matches; i++) {
+    for (int j = 0; j < matches; j++) {
       to_write.append("\t");
-      to_write.append(std::to_string(sa[loc + i]));
+      to_write.append(std::to_string(sa[loc + j]));
     }
     results.push_back(to_write);
   }
 
-  // Write results file to disk
+  // Write results to file
   std::ofstream os(out_file);
   std::sort(results.begin(), results.end());
   for (std::string s : results) {
