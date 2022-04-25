@@ -73,6 +73,7 @@ int main(int argc, char* argv[]) {
   if (pref_len > 0) {
     archive(preftab);
   }
+  os.close();
   
   return 0;
 }

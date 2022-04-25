@@ -54,6 +54,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Read queries and search
+  std::vector<std::string> results;
   FastaReader fr(query_file);
   while (fr.hasNextSequence()) {
     fr.readSequence();
@@ -81,8 +82,27 @@ int main(int argc, char* argv[]) {
     while (is_prefix(query, suffix(full_ref, sa[loc + matches]))) {
       matches++;
     }
-    //if (matches > 1) std::cout << fr.Id() << " " << fr.Description() << " Loc: " << loc << " Matches: " << matches << std::endl;
-    
+    std::string to_write = fr.Id();
+    if (fr.Description().length() > 0 && fr.Description() != " ") {
+      to_write.append(" ");
+      to_write.append(fr.Description());
+    }
+    to_write.append("\t");
+    to_write.append(std::to_string(matches));
+    for (int i = 0; i < matches; i++) {
+      to_write.append("\t");
+      to_write.append(std::to_string(sa[loc + i]));
+    }
+    results.push_back(to_write);
   }
+
+  // Write results file to disk
+  std::ofstream os(out_file);
+  std::sort(results.begin(), results.end());
+  for (std::string s : results) {
+    os << s << std::endl;
+  }
+  os.close();
+
   return 0;
 }
