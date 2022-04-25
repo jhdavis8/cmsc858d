@@ -6,7 +6,9 @@
 #include "FastaReader.hpp"
 #include "sdsl/qsufsort.hpp"
 #include "cereal/archives/binary.hpp"
-#include <cereal/types/string.hpp>
+#include "cereal/types/string.hpp"
+#include "cereal/types/unordered_map.hpp"
+#include "cereal/types/array.hpp"
 
 int main(int argc, char* argv[]) {
   // Process command line arguments
@@ -16,12 +18,12 @@ int main(int argc, char* argv[]) {
   }
   std::string ref;
   std::string outp;
-  int preftab = -1;
+  int pref_len = -1;
   int aoff = 0;
   
   if (std::string(argv[1]) == "--preftab") {
     std::istringstream ss(argv[2]);
-    if (!(ss >> preftab) || preftab < 0) {
+    if (!(ss >> pref_len) || pref_len < 0) {
       std::cerr << "Invalid number: " << argv[2] << std::endl;
       return 1;
     }
@@ -45,11 +47,40 @@ int main(int argc, char* argv[]) {
   c_ref.push_back('\0');
   sdsl::qsufsort::construct_sa(sa, c_ref);
 
+  // Construct prefix lookup table if needed
+  std::unordered_map<std::string, std::array<int, 2>> preftab;
+  if (pref_len > 0) {
+    std::string curr_pref = full_ref.substr(sa[0], pref_len);
+    int curr_itv_start = 0;
+    //std::cout << "Full text length: " << full_ref.length() << std::endl;
+    //std::cout << "First suffix pos: " << sa[0] << std::endl;
+    for (int i = 0; i < sa.size(); i++) {
+      std::string chk = full_ref.substr(sa[i], pref_len);
+      if (chk != curr_pref || i == sa.size() - 1) {
+        //std::cout << curr_pref << " " << curr_itv_start << " " << i << " " << chk << ":" << sa[i] << std::endl;
+        preftab.insert({curr_pref, {curr_itv_start, i}});
+        curr_pref = chk;
+        curr_itv_start = i;
+      }
+    }
+  }
+
+  /*
+  std::cout << "Prefix table:" << std::endl;
+  for (const auto& [key, value] : preftab) {
+    std::cout << key << " " << value[0] << " " << value[1] << std::endl;
+  }
+  */
+
   // Write suffix array to disk using cereal and sdsl built-in serialization
   std::ofstream os(outp, std::ios::binary);
   cereal::BinaryOutputArchive archive(os);
   archive(full_ref);
   sa.serialize(os);
+  archive(pref_len);
+  if (pref_len > 0) {
+    archive(preftab);
+  }
   
   return 0;
 }
