@@ -23,6 +23,32 @@ std::string suffix(std::string full, int start) {
   return full.substr(start, full.length() - start);
 }
 
+int lcp_len(std::string a, std::string b) {
+  int search_len = std::min(a.length(), b.length());
+  int result = 0;
+  for (int i = 0; i < search_len; i++) {
+    if (a[i] == b[i]) result++;
+    else return result;
+  }
+  return result;
+}
+
+int opt_compare(std::string a, std::string b, int mlh) {
+  if (mlh == 0) return a.compare(b);
+  else return a.substr(mlh + 1, a.length() - (mlh + 1)).compare(b.substr(mlh + 1,
+                                                                         b.length() - (mlh + 1)));
+  /*
+  else {
+    int search_len = std::min(a.length(), b.length());
+    for (int i = mlh; i < search_len; i++) {
+      if (a[i] > b[i]) return 1;
+      else if (a[i] < b[i]) return -1;
+    }
+    return (a.length() > b.length()) - (a.length() < b.length());
+  }
+  */
+}
+
 int main(int argc, char* argv[]) {
   // Process command line arguments
   if (argc < 5) {
@@ -31,10 +57,11 @@ int main(int argc, char* argv[]) {
   }
   std::string index_file = argv[1];
   std::string query_file = argv[2];
-  std::string mode = argv[3];
+  std::string mode_s = argv[3];
+  int mode = (mode_s == "simpaccel") ? 1 : 0;
   std::string out_file = argv[4];
-  if (mode != "naive" && mode != "simpaccel") {
-    std::cerr << "Invalid query mode: " << mode << std::endl;
+  if (mode_s != "naive" && mode_s != "simpaccel") {
+    std::cerr << "Invalid query mode: " << mode_s << std::endl;
     return 1;
   }
 
@@ -68,23 +95,29 @@ int main(int argc, char* argv[]) {
     descriptions.push_back(des);
   }
 
+  //std::cout << full_ref.length() << std::endl;
+  
   // Search for all queries and record in vector
   std::vector<std::string> results;
   for (int i = 0; i < queries.size(); i++) {
     std::string query = queries[i];
     int l, h;
     if (pref_len > 0) {
-      std::array<int, 2> pair = preftab.at(query.substr(0, preflen));
+      std::array<int, 2> pair = preftab.at(query.substr(0, pref_len));
       l = pair[0];
       h = pair[1] - 1;
     } else {
       l = 0;
-      h = sa.size();
+      h = sa.size() - 1;
     }
+    std::cout << l << " " << h << std::endl;
     int c = floor((l + h)/2);
     int loc = -1;
+    int mlh = 0;
+    int iters = 0;
     while (loc < 0) {
-      int cmp = query.compare(suffix(full_ref, sa[c]));
+      //std::cout << query << " " << c << " " << l << " " << h << std::endl;
+      int cmp = opt_compare(query, suffix(full_ref, sa[c]), mlh);
       if (cmp > 0) {
         if (c == h - 1) {
           loc = h;
@@ -97,7 +130,13 @@ int main(int argc, char* argv[]) {
         h = c;
       }
       c = floor((l + h)/2);
+      if (mode == 1) { // enable simpaccel if requested
+        mlh = std::min(lcp_len(suffix(full_ref, sa[l]), query),
+                       lcp_len(suffix(full_ref, sa[h]), query));
+      }
+      iters++;
     }
+    std::cout << iters << std::endl;
     int matches = 0;
     while (is_prefix(query, suffix(full_ref, sa[loc + matches]))) {
       matches++;
