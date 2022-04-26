@@ -34,14 +34,15 @@ int lcp_len(std::string a, std::string b, int curr_len) {
   return result;
 }
 
-int opt_compare(std::string a, std::string b, int* mlh) {
+int opt_compare(std::string a, std::string b, int* mlh, int mode) {
+  if (mode == 0) *mlh = 0;
   for (int i = *mlh; i < std::min(a.length(), b.length()); i++) {
     if (a[i] > b[i]) {
       return 1;
     } else if (a[i] < b[i]) {
       return -1;
     } else {
-      (*mlh)++;
+      if (mode == 1) (*mlh)++;
     }
   }
   return (a.length() > b.length()) - (a.length() < b.length());
@@ -122,11 +123,7 @@ int main(int argc, char* argv[]) {
     while (loc < 0) {
       //std::cout << query << " " << c << " " << l << " " << h << std::endl;
       int cmp;
-      if (mode == 1) {
-        cmp = opt_compare(query, suffix(full_ref, sa[c]), &mlh);
-      } else {
-        cmp = query.compare(suffix(full_ref, sa[c]));
-      }
+      cmp = opt_compare(query, suffix(full_ref, sa[c]), &mlh, mode);
       if (h - l < 2) {
         for (int j = l; j <= h; j++) {
           if (is_prefix(query, suffix(full_ref, sa[j]))) {
