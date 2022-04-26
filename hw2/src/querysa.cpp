@@ -105,17 +105,27 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i < queries.size(); i++) {
     std::string query = queries[i];
     int l, h;
-    if (pref_len > 0) {
+    int loc = -1;
+    if (pref_len > 0 && preftab.contains(query.substr(0, pref_len))) {
       std::array<int, 2> pair = preftab.at(query.substr(0, pref_len));
       l = pair[0];
       h = pair[1] - 1;
+      /*
+      if (i == 203) {
+        std::cout << suffix(full_ref, sa[l - 1]).substr(0, query.length()) << std::endl;
+        std::cout << suffix(full_ref, sa[l    ]).substr(0, query.length()) << std::endl;
+        std::cout << suffix(full_ref, sa[h    ]).substr(0, query.length()) << std::endl;
+        std::cout << suffix(full_ref, sa[h + 1]).substr(0, query.length()) << std::endl;
+      }
+      */
     } else {
       l = 0;
       h = sa.size() - 1;
     }
+    if (pref_len > 0 && preftab.contains(query.substr(0, pref_len))) loc = 0; // skip search
     //std::cout << i << " " << l << " " << h << " " << query << std::endl;
+    //std::cout << query.substr(0, pref_len) << std::endl;
     int c = floor((l + h)/2);
-    int loc = -1;
     int lcp_l = (mode == 1) ? lcp_len(suffix(full_ref, sa[l]), query, lcp_l) : 0;
     int lcp_h = (mode == 1) ? lcp_len(suffix(full_ref, sa[h]), query, lcp_h) : 0;
     int mlh = (mode == 1) ? std::min(lcp_l, lcp_h) : 0;
@@ -125,12 +135,15 @@ int main(int argc, char* argv[]) {
       int cmp;
       cmp = opt_compare(query, suffix(full_ref, sa[c]), &mlh, mode);
       if (h - l < 2) {
+        //std::cout << "Direct search" << std::endl;
         for (int j = l; j <= h; j++) {
           if (is_prefix(query, suffix(full_ref, sa[j]))) {
             loc = j;
+            //std::cout << "Hit" << std::endl;
             break;
           }
         }
+        break;
       } else {
         if (cmp > 0) {
           if (c == h - 1) {
@@ -168,7 +181,7 @@ int main(int argc, char* argv[]) {
     results.push_back(to_write);
   }
   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  std::cout << "Query time = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+  std::cout << "Query time = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 
   // Write results to file
   std::ofstream os(out_file);

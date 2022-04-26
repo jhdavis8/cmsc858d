@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Construct suffix array using SDSL qsufsort::construct_sa
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
   sdsl::int_vector<64> sa;
   std::vector<char> c_ref(full_ref.begin(), full_ref.end());
   c_ref.push_back('\0');
@@ -63,6 +64,8 @@ int main(int argc, char* argv[]) {
       }
     }
   }
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+  std::cout << "Build time = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 
   // Write suffix array to disk using cereal and sdsl built-in serialization
   std::ofstream os(outp, std::ios::binary);
