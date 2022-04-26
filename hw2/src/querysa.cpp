@@ -6,6 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <chrono>
 
 // External lib includes
 #include "FastaReader.hpp"
@@ -23,30 +24,30 @@ std::string suffix(std::string full, int start) {
   return full.substr(start, full.length() - start);
 }
 
-int lcp_len(std::string a, std::string b) {
+int lcp_len(std::string a, std::string b, int curr_len) {
   int search_len = std::min(a.length(), b.length());
-  int result = 0;
-  for (int i = 0; i < search_len; i++) {
+  int result = curr_len;
+  for (int i = curr_len; i < search_len; i++) {
     if (a[i] == b[i]) result++;
-    else return result;
+    else break;
   }
   return result;
 }
 
-int opt_compare(std::string a, std::string b, int mlh) {
-  if (mlh == 0) return a.compare(b);
-  else return a.substr(mlh + 1, a.length() - (mlh + 1)).compare(b.substr(mlh + 1,
-                                                                         b.length() - (mlh + 1)));
-  /*
-  else {
-    int search_len = std::min(a.length(), b.length());
-    for (int i = mlh; i < search_len; i++) {
-      if (a[i] > b[i]) return 1;
-      else if (a[i] < b[i]) return -1;
+int opt_compare(std::string a, std::string b, int* mlh) {
+  for (int i = *mlh; i < std::min(a.length(), b.length()); i++) {
+    if (a[i] > b[i]) {
+      return 1;
+    } else if (a[i] < b[i]) {
+      return -1;
+    } else {
+      (*mlh)++;
     }
-    return (a.length() > b.length()) - (a.length() < b.length());
   }
-  */
+  return (a.length() > b.length()) - (a.length() < b.length());
+  //if (mlh == 0) return a.compare(b);
+  //else return a.substr(mlh + 1, a.length() - (mlh + 1)).compare(b.substr(mlh + 1,
+  //                                                                       b.length() - (mlh + 1)));
 }
 
 int main(int argc, char* argv[]) {
@@ -98,6 +99,7 @@ int main(int argc, char* argv[]) {
   //std::cout << full_ref.length() << std::endl;
   
   // Search for all queries and record in vector
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
   std::vector<std::string> results;
   for (int i = 0; i < queries.size(); i++) {
     std::string query = queries[i];
@@ -110,14 +112,21 @@ int main(int argc, char* argv[]) {
       l = 0;
       h = sa.size() - 1;
     }
-    std::cout << i << " " << l << " " << h << " " << query << std::endl;
+    //std::cout << i << " " << l << " " << h << " " << query << std::endl;
     int c = floor((l + h)/2);
     int loc = -1;
-    int mlh = 0;
+    int lcp_l = (mode == 1) ? lcp_len(suffix(full_ref, sa[l]), query, lcp_l) : 0;
+    int lcp_h = (mode == 1) ? lcp_len(suffix(full_ref, sa[h]), query, lcp_h) : 0;
+    int mlh = (mode == 1) ? std::min(lcp_l, lcp_h) : 0;
     int iters = 0;
     while (loc < 0) {
       //std::cout << query << " " << c << " " << l << " " << h << std::endl;
-      int cmp = opt_compare(query, suffix(full_ref, sa[c]), mlh);
+      int cmp;
+      if (mode == 1) {
+        cmp = opt_compare(query, suffix(full_ref, sa[c]), &mlh);
+      } else {
+        cmp = query.compare(suffix(full_ref, sa[c]));
+      }
       if (h - l < 2) {
         for (int j = l; j <= h; j++) {
           if (is_prefix(query, suffix(full_ref, sa[j]))) {
@@ -131,18 +140,17 @@ int main(int argc, char* argv[]) {
             loc = h;
           }
           l = c;
+          if (mode == 1) lcp_l = mlh;
         } else if (cmp < 0) {
           if (c == l + 1) {
             loc = l;
           }
           h = c;
+          if (mode == 1) lcp_h = mlh;
         }
        }
       c = floor((l + h)/2);
-      if (mode == 1) { // enable simpaccel if requested
-        mlh = std::min(lcp_len(suffix(full_ref, sa[l]), query),
-                       lcp_len(suffix(full_ref, sa[h]), query));
-      }
+      if (mode == 1) mlh = std::min(lcp_l, lcp_h);
       iters++;
     }
     //std::cout << iters << std::endl;
@@ -162,6 +170,8 @@ int main(int argc, char* argv[]) {
     }
     results.push_back(to_write);
   }
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+  std::cout << "Query time = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
 
   // Write results to file
   std::ofstream os(out_file);
