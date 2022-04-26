@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
       l = 0;
       h = sa.size() - 1;
     }
-    std::cout << l << " " << h << std::endl;
+    std::cout << i << " " << l << " " << h << " " << query << std::endl;
     int c = floor((l + h)/2);
     int loc = -1;
     int mlh = 0;
@@ -118,17 +118,26 @@ int main(int argc, char* argv[]) {
     while (loc < 0) {
       //std::cout << query << " " << c << " " << l << " " << h << std::endl;
       int cmp = opt_compare(query, suffix(full_ref, sa[c]), mlh);
-      if (cmp > 0) {
-        if (c == h - 1) {
-          loc = h;
+      if (h - l < 2) {
+        for (int j = l; j <= h; j++) {
+          if (is_prefix(query, suffix(full_ref, sa[j]))) {
+            loc = j;
+            break;
+          }
         }
-        l = c;
-      } else if (cmp < 0) {
-        if (c == l + 1) {
-          loc = c;
+      } else {
+        if (cmp > 0) {
+          if (c == h - 1) {
+            loc = h;
+          }
+          l = c;
+        } else if (cmp < 0) {
+          if (c == l + 1) {
+            loc = l;
+          }
+          h = c;
         }
-        h = c;
-      }
+       }
       c = floor((l + h)/2);
       if (mode == 1) { // enable simpaccel if requested
         mlh = std::min(lcp_len(suffix(full_ref, sa[l]), query),
@@ -136,9 +145,12 @@ int main(int argc, char* argv[]) {
       }
       iters++;
     }
-    std::cout << iters << std::endl;
+    //std::cout << iters << std::endl;
     int matches = 0;
-    while (is_prefix(query, suffix(full_ref, sa[loc + matches]))) {
+    if (loc >= 0 && !is_prefix(query, suffix(full_ref, sa[loc]))) {
+      loc++;
+    }
+    while (loc >= 0 && is_prefix(query, suffix(full_ref, sa[loc + matches]))) {
       matches++;
     }
     std::string to_write = descriptions[i];
