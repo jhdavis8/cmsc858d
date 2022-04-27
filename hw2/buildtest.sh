@@ -1,0 +1,9 @@
+./buildsa --preftab 0 seavase.fa  seavase_index_0  && du -h seavase_index_0 
+./buildsa --preftab 2 seavase.fa  seavase_index_2  && du -h seavase_index_2 
+./buildsa --preftab 4 seavase.fa  seavase_index_4  && du -h seavase_index_4 
+./buildsa --preftab 6 seavase.fa  seavase_index_6  && du -h seavase_index_6 
+./buildsa --preftab 8 seavase.fa  seavase_index_8  && du -h seavase_index_8 
+./buildsa --preftab 10 seavase.fa seavase_index_10 && du -h seavase_index_10
+./buildsa --preftab 12 seavase.fa seavase_index_12 && du -h seavase_index_12
+./buildsa --preftab 14 seavase.fa seavase_index_14 && du -h seavase_index_14
+./buildsa --preftab 16 seavase.fa seavase_index_16 && du -h seavase_index_16

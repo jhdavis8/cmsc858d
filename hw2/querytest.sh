@@ -1,0 +1,9 @@
+./querysa yeast_index_0 query-100-large.fa naive qout
+./querysa yeast_index_2 query-100-large.fa naive qout
+./querysa yeast_index_4 query-100-large.fa naive qout
+./querysa yeast_index_6 query-100-large.fa naive qout
+./querysa yeast_index_8 query-100-large.fa naive qout
+./querysa yeast_index_10 query-100-large.fa naive qout
+./querysa yeast_index_12 query-100-large.fa naive qout
+./querysa yeast_index_14 query-100-large.fa naive qout
+./querysa yeast_index_16 query-100-large.fa naive qout

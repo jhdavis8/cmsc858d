@@ -24,28 +24,30 @@ std::string suffix(std::string full, int start) {
   return full.substr(start, full.length() - start);
 }
 
-int lcp_len(std::string a, std::string b, int curr_len) {
-  int search_len = std::min(a.length(), b.length());
+int lcp_len(std::string a, int a_pos, std::string b, int curr_len) {
+  int search_len = std::min(a.length() - (a_pos - 1), b.length());
   int result = curr_len;
   for (int i = curr_len; i < search_len; i++) {
-    if (a[i] == b[i]) result++;
+    if (a[i + a_pos] == b[i]) result++;
     else break;
   }
   return result;
 }
 
-int opt_compare(std::string a, std::string b, int* mlh, int mode) {
+int opt_compare(std::string a, std::string b, int b_pos, int* mlh, int mode) {
   if (mode == 0) *mlh = 0;
-  for (int i = *mlh; i < std::min(a.length(), b.length()); i++) {
-    if (a[i] > b[i]) {
+  int a_len = a.length();
+  int b_len = b.length() - (b_pos - 1);
+  for (int i = *mlh; i < std::min(a_len, b_len); i++) {
+    if (a[i] > b[i + b_pos]) {
       return 1;
-    } else if (a[i] < b[i]) {
+    } else if (a[i] < b[i + b_pos]) {
       return -1;
     } else {
       if (mode == 1) (*mlh)++;
     }
   }
-  return (a.length() > b.length()) - (a.length() < b.length());
+  return (a_len > b_len) - (a_len < b_len);
   //if (mlh == 0) return a.compare(b);
   //else return a.substr(mlh + 1, a.length() - (mlh + 1)).compare(b.substr(mlh + 1,
   //                                                                       b.length() - (mlh + 1)));
@@ -126,14 +128,14 @@ int main(int argc, char* argv[]) {
     //std::cout << i << " " << l << " " << h << " " << query << std::endl;
     //std::cout << query.substr(0, pref_len) << std::endl;
     int c = floor((l + h)/2);
-    int lcp_l = (mode == 1) ? lcp_len(suffix(full_ref, sa[l]), query, lcp_l) : 0;
-    int lcp_h = (mode == 1) ? lcp_len(suffix(full_ref, sa[h]), query, lcp_h) : 0;
+    int lcp_l = (mode == 1) ? lcp_len(full_ref, sa[l], query, lcp_l) : 0;
+    int lcp_h = (mode == 1) ? lcp_len(full_ref, sa[h], query, lcp_h) : 0;
     int mlh = (mode == 1) ? std::min(lcp_l, lcp_h) : 0;
     int iters = 0;
     while (loc < 0) {
       //std::cout << query << " " << c << " " << l << " " << h << std::endl;
       int cmp;
-      cmp = opt_compare(query, suffix(full_ref, sa[c]), &mlh, mode);
+      cmp = opt_compare(query, full_ref, sa[c], &mlh, mode);
       if (h - l < 2) {
         //std::cout << "Direct search" << std::endl;
         for (int j = l; j <= h; j++) {

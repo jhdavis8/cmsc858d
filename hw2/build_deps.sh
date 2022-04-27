@@ -8,5 +8,5 @@ make
 
 ctest
 
-cd ../sdsl-lite
+cd ../../sdsl-lite
 ./install.sh ..
